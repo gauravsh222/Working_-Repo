@@ -16,12 +16,12 @@ zuul:
  routes:
     Producer:
       path: /producers/**
-      url: http://localhost:4040
-      
+      #url: http://localhost:4040
+      serviceId: PRODUCER
     JPA:
        path: /jpa/**
-       url: http://localhost:9090
-       
+       #url: http://localhost:9090
+       serviceId: JPA
 logging:
       level:
            root: ERROR

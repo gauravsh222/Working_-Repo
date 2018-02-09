@@ -1,13 +1,14 @@
 package com.cisco.producer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -35,14 +36,25 @@ public class MyController {
 	private String topic;
 
 	@Autowired
-	RestTemplate tertTemplate;
+	RestTemplate restTemplate;
 	
 	@RequestMapping(value = "/init", method = RequestMethod.GET)
 	public ModelAndView init() {
+		return new ModelAndView("index");
+	}
+	
+	
+	@RequestMapping(value = "/add", method = RequestMethod.GET)
+	public ModelAndView add() {
 		return new ModelAndView("addDevice", "device", new Device());
 	}
 
-	@RequestMapping(value = "/pub", method = RequestMethod.POST)
+	@RequestMapping(value = "/pub", method = RequestMethod.GET)
+	public ModelAndView pub() {
+		return new ModelAndView("publishDevice", "device", new Device());
+	}
+
+	@RequestMapping(value = "/publish", method = RequestMethod.POST)
 	public void produce(@ModelAttribute Device device) {
 		ListenableFuture<SendResult<String, Device>> obj = template
 				.send(new ProducerRecord<String, Device>(topic, device));
@@ -50,17 +62,17 @@ public class MyController {
 	}
 
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
-	public ResponseEntity<String> save(@ModelAttribute Device device, @RequestParam("File") MultipartFile file) {
+	public ModelAndView save(@ModelAttribute Device device, @RequestParam("File") MultipartFile file) throws FileNotFoundException {
 		System.out.println("Save Service Called and file is : " + file.getOriginalFilename());
 		if (file.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file and try again");
+			throw new FileNotFoundException("Please select a file and try again");
 		}
 
-		String response = null;
+		Device response = null;
 		try {
-			response = tertTemplate.postForEntity(
+			response = restTemplate.postForEntity(
 					"http://API-Gateway/api/jpa/device/save", device,
-					String.class).getBody();
+					Device.class).getBody();
 			
 			// read and write the file to the selected location-
 			try {
@@ -72,13 +84,17 @@ public class MyController {
 			}
 			
 		} catch (RestClientException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Exception Occured in Consumer Service");
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Service Not Available");
+			throw new RestClientException("Service Not Available");
 		}
 		System.out.println("Response : " + response);
-		return ResponseEntity.status(HttpStatus.OK).body(response);
+		return new ModelAndView("addDevice", "device", response);
 	}
-
+	
+	@RequestMapping(value = "/find", method = RequestMethod.GET)
+	public ModelAndView findDevice() {
+		ResponseEntity<List> response = restTemplate.getForEntity("http://API-Gateway/api/jpa/device/find", List.class);
+		return new ModelAndView("findDevice", "list", response.getBody());
+	}
 }

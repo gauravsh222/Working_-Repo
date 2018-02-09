@@ -21,8 +21,7 @@ public class JPAController {
 	DeviceRepository repo;
 	
 	@RequestMapping(value="/find", method=RequestMethod.GET)
-	public List<Device> getDevice() {
-		System.out.println("Called Get");
+	public List<Device> getDevices() {
 		List<Device> list = new ArrayList<Device>();
 		 Iterable<Device> it = repo.findAll();
 		 Iterator<Device> iter = it.iterator();
@@ -34,11 +33,19 @@ public class JPAController {
 	}
 	
 	@RequestMapping(value="/save", method=RequestMethod.POST)
-	public String addDevice(@RequestBody Device device) {
-		System.out.println("save called : " + device.getIpAddress());
-		repo.save(device);
-		return "Saved Device";
+	public Device addDevice(@RequestBody Device device) {
+		 return repo.save(device);
 	}
 	
+	
+	@RequestMapping(value="/get", method=RequestMethod.GET)
+	public Device getDevice() {
+		 Iterable<Device> it = repo.findAll();
+		 Iterator<Device> iter = it.iterator();
+		 while (iter.hasNext()) {
+			return (Device) iter.next();
+		}
+		return null;
+	}
 	
 }

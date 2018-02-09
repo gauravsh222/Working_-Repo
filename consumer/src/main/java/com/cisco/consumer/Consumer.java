@@ -21,17 +21,15 @@ public class Consumer {
 		  // calling JPA service to persist in DB
 		  System.out.println("Calling DB Service");
 //		  String response = template.postForEntity("http://JPA/device/save", device, String.class).getBody();
-		  String response = null;
+		  Device response = null;
 		try {
-			response = template.postForEntity("http://API-Gateway/api/jpa/device/save", device, String.class).getBody();
+			response = template.postForEntity("http://API-Gateway/api/jpa/device/save", device, Device.class).getBody();
 		} catch (RestClientException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Exception Occured in Consumer Service");
 			e.printStackTrace();
 		}
 		  System.out.println("Response : " + response);
-		  
-		  
 	  }
 	  
 	  @KafkaListener(topics = "${jsa.kafka.topic.xyz}")
